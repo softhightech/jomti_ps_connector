@@ -1,6 +1,6 @@
 <?php
 
-class PslandingpageWebhookModuleFrontController extends \ModuleFrontController
+class Jomti_Ps_ConnectorWebhookModuleFrontController extends \ModuleFrontController
 {
     public $ssl = true;
 
@@ -8,7 +8,7 @@ class PslandingpageWebhookModuleFrontController extends \ModuleFrontController
     {
         $this->jsonResponse([
             'success' => true,
-            'module' => 'pslandingpage',
+            'module' => 'jomti_ps_connector',
             'message' => 'Webhook endpoint is reachable.',
             'timestamp' => date('c'),
         ], 200);

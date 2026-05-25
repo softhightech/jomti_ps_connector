@@ -32,7 +32,7 @@ class PsLandingPageLogger
         }
 
         \PrestaShopLogger::addLog(
-            '[pslandingpage] ' . (string) $message . $contextJson,
+            '[jomti_ps_connector] ' . (string) $message . $contextJson,
             (int) $severity,
             null,
             'Module',

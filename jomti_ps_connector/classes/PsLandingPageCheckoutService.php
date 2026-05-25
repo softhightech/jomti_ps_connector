@@ -2,13 +2,13 @@
 
 class PsLandingPageCheckoutService
 {
-    /** @var \Pslandingpage */
+    /** @var \Jomti_Ps_Connector */
     private $module;
 
     /** @var \Context */
     private $context;
 
-    public function __construct(\Pslandingpage $module)
+    public function __construct(\Jomti_Ps_Connector $module)
     {
         $this->module = $module;
         $this->context = \Context::getContext();

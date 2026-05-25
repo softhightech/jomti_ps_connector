@@ -2,10 +2,10 @@
 
 class PsLandingPageWebhookService
 {
-    /** @var \Pslandingpage */
+    /** @var \Jomti_Ps_Connector */
     private $module;
 
-    public function __construct(\Pslandingpage $module)
+    public function __construct(\Jomti_Ps_Connector $module)
     {
         $this->module = $module;
     }

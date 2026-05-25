@@ -1,12 +1,14 @@
 <?php
 
-class PslandingpageApiModuleFrontController extends \ModuleFrontController
+class Jomti_Ps_ConnectorApiModuleFrontController extends \ModuleFrontController
 {
     public $ssl = true;
 
     public function postProcess()
     {
         $method = strtoupper((string) $_SERVER['REQUEST_METHOD']);
+        dump($method);
+        die;
         if ($method !== 'POST') {
             $this->jsonResponse([
                 'success' => false,

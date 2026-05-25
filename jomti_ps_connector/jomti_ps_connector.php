@@ -8,16 +8,16 @@ require_once __DIR__ . '/classes/PsLandingPageLogger.php';
 require_once __DIR__ . '/classes/PsLandingPageCheckoutService.php';
 require_once __DIR__ . '/classes/PsLandingPageWebhookService.php';
 
-class Pslandingpage extends \Module
+class Jomti_Ps_Connector extends \Module
 {
-    const CONFIG_ENABLED = 'PSLANDINGPAGE_ENABLED';
-    const CONFIG_JOMTI_URL = 'PSLANDINGPAGE_JOMTI_URL';
-    const CONFIG_API_KEY = 'PSLANDINGPAGE_API_KEY';
-    const CONFIG_DEBUG = 'PSLANDINGPAGE_DEBUG';
+    const CONFIG_ENABLED = 'JOMTI_PS_CONNECTOR_ENABLED';
+    const CONFIG_JOMTI_URL = 'JOMTI_PS_CONNECTOR_JOMTI_URL';
+    const CONFIG_API_KEY = 'JOMTI_PS_CONNECTOR_API_KEY';
+    const CONFIG_DEBUG = 'JOMTI_PS_CONNECTOR_DEBUG';
 
     public function __construct()
     {
-        $this->name = 'pslandingpage';
+        $this->name = 'jomti_ps_connector';
         $this->tab = 'advertising_marketing';
         $this->version = '1.0.0';
         $this->author = 'Custom';
@@ -28,8 +28,8 @@ class Pslandingpage extends \Module
 
         parent::__construct();
 
-        $this->displayName = $this->trans('PS Landing Page', [], 'Modules.Pslandingpage.Admin');
-        $this->description = $this->trans('Creates customer carts from a Laravel landing page and redirects users to checkout.', [], 'Modules.Pslandingpage.Admin');
+        $this->displayName = $this->trans('Jomti PS Connector', [], 'Modules.JomtiPsConnector.Admin');
+        $this->description = $this->trans('Creates customer carts from a Laravel landing page and redirects users to checkout.', [], 'Modules.JomtiPsConnector.Admin');
     }
 
     public function install()
@@ -56,7 +56,7 @@ class Pslandingpage extends \Module
     {
         $output = '';
 
-        if (\Tools::isSubmit('submitPslandingpageConfig')) {
+        if (\Tools::isSubmit('submitJomtiPsConnectorConfig')) {
             try {
                 $this->postProcess();
                 $output .= $this->displayConfirmation($this->trans('Settings updated.', [], 'Admin.Notifications.Success'));
@@ -71,18 +71,18 @@ class Pslandingpage extends \Module
     public function postProcess()
     {
         $enabled = (int) \Tools::getValue(self::CONFIG_ENABLED, 1);
-        $jomtiUrl = "https://jomti.com";//"http://127.0.0.1:8000";
+        $jomtiUrl = "http://127.0.0.1:8000";//"https://jomti.com";
         $apiKey = trim((string) \Tools::getValue(self::CONFIG_API_KEY, ''));
         $debug = (int) \Tools::getValue(self::CONFIG_DEBUG, 0);
 
 
         if ($apiKey === '') {
-            throw new \PrestaShopException($this->trans('API key is required.', [], 'Modules.Pslandingpage.Admin'));
+            throw new \PrestaShopException($this->trans('API key is required.', [], 'Modules.JomtiPsConnector.Admin'));
         }
 
         $validation = $this->validateRemoteApiKey($jomtiUrl, $apiKey);
         if (!$validation['success']) {
-            throw new \PrestaShopException($this->trans('Could not validate API key on Jomti: %error%', ['%error%' => $validation['error']], 'Modules.Pslandingpage.Admin'));
+            throw new \PrestaShopException($this->trans('Could not validate API key on Jomti: %error%', ['%error%' => $validation['error']], 'Modules.JomtiPsConnector.Admin'));
         }
 
         \Configuration::updateValue(self::CONFIG_ENABLED, $enabled);
@@ -102,21 +102,21 @@ class Pslandingpage extends \Module
                 'input' => [
                     // [
                     //     'type' => 'text',
-                    //     'label' => $this->trans('Jomti URL', [], 'Modules.Pslandingpage.Admin'),
+                    //     'label' => $this->trans('Jomti URL', [], 'Modules.JomtiPsConnector.Admin'),
                     //     'name' => self::CONFIG_JOMTI_URL,
                     //     'required' => true,
-                    //     'desc' => $this->trans('Example: https://jomti.com', [], 'Modules.Pslandingpage.Admin'),
+                    //     'desc' => $this->trans('Example: https://jomti.com', [], 'Modules.JomtiPsConnector.Admin'),
                     // ],
                     [
                         'type' => 'text',
-                        'label' => $this->trans('API Key', [], 'Modules.Pslandingpage.Admin'),
+                        'label' => $this->trans('API Key', [], 'Modules.JomtiPsConnector.Admin'),
                         'name' => self::CONFIG_API_KEY,
                         'required' => true,
                     ],
                 ],
                 'submit' => [
                     'title' => $this->trans('Save', [], 'Admin.Actions'),
-                    'name' => 'submitPslandingpageConfig',
+                    'name' => 'submitJomtiPsConnectorConfig',
                 ],
             ],
         ];
@@ -126,7 +126,7 @@ class Pslandingpage extends \Module
         $helper->name_controller = $this->name;
         $helper->token = \Tools::getAdminTokenLite('AdminModules');
         $helper->currentIndex = \AdminController::$currentIndex . '&configure=' . $this->name;
-        $helper->submit_action = 'submitPslandingpageConfig';
+        $helper->submit_action = 'submitJomtiPsConnectorConfig';
         $helper->default_form_language = (int) $this->context->language->id;
         $helper->allow_employee_form_lang = (int) \Configuration::get('PS_BO_ALLOW_EMPLOYEE_FORM_LANG');
 

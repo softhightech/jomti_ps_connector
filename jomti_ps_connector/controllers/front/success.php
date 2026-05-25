@@ -1,6 +1,6 @@
 <?php
 
-class PslandingpageSuccessModuleFrontController extends \ModuleFrontController
+class Jomti_Ps_ConnectorSuccessModuleFrontController extends \ModuleFrontController
 {
     public $ssl = true;
 
