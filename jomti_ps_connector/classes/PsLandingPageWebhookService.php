@@ -37,6 +37,7 @@ class PsLandingPageWebhookService
             'event' => 'order_status_changed',
             'trigger' => (string) $trigger,
             'order_id' => (int) $order->id,
+            'id_cart' => (int) $order->id_cart,
             'reference' => (string) $order->reference,
             'status' => [
                 'id' => (int) $order->current_state,
@@ -61,33 +62,20 @@ class PsLandingPageWebhookService
             return;
         }
 
-        $ch = curl_init($webhookUrl);
-        if ($ch === false) {
-            \PsLandingPageLogger::error('Unable to init cURL for webhook.', ['url' => $webhookUrl]);
-
-            return;
-        }
-
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_POST, true);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+        $webhookId = sha1((int) $order->id . '|' . (string) $order->reference . '|' . (string) $trigger . '|' . (int) $order->current_state);
+        $result = $this->postJsonWithRetry($webhookUrl, $body, [
             'Content-Type: application/json',
             'Accept: application/json',
             'X-API-Key: ' . $this->module->getApiKey(),
-        ]);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, $body);
-        curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+            'X-Webhook-Id: ' . $webhookId,
+        ], 3);
 
-        $responseBody = curl_exec($ch);
-        $curlError = curl_error($ch);
-        $httpCode = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
-
-        if ($curlError) {
+        if (!$result['success']) {
             \PsLandingPageLogger::error('Webhook request failed.', [
                 'url' => $webhookUrl,
                 'order_id' => (int) $order->id,
-                'error' => $curlError,
+                'error' => $result['error'],
+                'http_code' => $result['http_code'],
             ]);
 
             return;
@@ -96,8 +84,65 @@ class PsLandingPageWebhookService
         \PsLandingPageLogger::info('Webhook sent.', [
             'url' => $webhookUrl,
             'order_id' => (int) $order->id,
-            'http_code' => $httpCode,
-            'response' => $this->module->isDebugEnabled() ? $responseBody : null,
+            'http_code' => $result['http_code'],
+            'response' => $this->module->isDebugEnabled() ? $result['response'] : null,
         ]);
+    }
+
+    private function postJsonWithRetry($url, $body, array $headers, $maxAttempts)
+    {
+        $attempt = 0;
+        $lastError = '';
+        $lastHttpCode = 0;
+        $lastResponse = '';
+
+        while ($attempt < (int) $maxAttempts) {
+            $attempt++;
+
+            $ch = curl_init($url);
+            if ($ch === false) {
+                return [
+                    'success' => false,
+                    'error' => 'Unable to initialize cURL.',
+                    'http_code' => 0,
+                ];
+            }
+
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_POST, true);
+            curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, $body);
+            curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5);
+            curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+
+            $responseBody = curl_exec($ch);
+            $curlError = curl_error($ch);
+            $httpCode = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            curl_close($ch);
+
+            $lastResponse = (string) $responseBody;
+            $lastHttpCode = $httpCode;
+            $lastError = (string) $curlError;
+
+            if ($curlError === '' && $httpCode >= 200 && $httpCode < 300) {
+                return [
+                    'success' => true,
+                    'error' => '',
+                    'http_code' => $httpCode,
+                    'response' => (string) $responseBody,
+                ];
+            }
+
+            if ($attempt < (int) $maxAttempts) {
+                usleep(250000 * $attempt);
+            }
+        }
+
+        return [
+            'success' => false,
+            'error' => $lastError !== '' ? $lastError : 'Webhook endpoint returned HTTP ' . (int) $lastHttpCode . '.',
+            'http_code' => $lastHttpCode,
+            'response' => $lastResponse,
+        ];
     }
 }

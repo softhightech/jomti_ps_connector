@@ -11,7 +11,6 @@ require_once __DIR__ . '/classes/PsLandingPageWebhookService.php';
 class Jomti_Ps_Connector extends \Module
 {
     const CONFIG_ENABLED = 'JOMTI_PS_CONNECTOR_ENABLED';
-    const CONFIG_JOMTI_URL = 'JOMTI_PS_CONNECTOR_JOMTI_URL';
     const CONFIG_API_KEY = 'JOMTI_PS_CONNECTOR_API_KEY';
     const CONFIG_DEBUG = 'JOMTI_PS_CONNECTOR_DEBUG';
 
@@ -38,7 +37,6 @@ class Jomti_Ps_Connector extends \Module
             && $this->registerHook('actionValidateOrder')
             && $this->registerHook('actionOrderStatusPostUpdate')
             && \Configuration::updateValue(self::CONFIG_ENABLED, 1)
-            && \Configuration::updateValue(self::CONFIG_JOMTI_URL, '')
             && \Configuration::updateValue(self::CONFIG_API_KEY, '')
             && \Configuration::updateValue(self::CONFIG_DEBUG, 0);
     }
@@ -46,7 +44,6 @@ class Jomti_Ps_Connector extends \Module
     public function uninstall()
     {
         return \Configuration::deleteByName(self::CONFIG_ENABLED)
-            && \Configuration::deleteByName(self::CONFIG_JOMTI_URL)
             && \Configuration::deleteByName(self::CONFIG_API_KEY)
             && \Configuration::deleteByName(self::CONFIG_DEBUG)
             && parent::uninstall();
@@ -71,22 +68,14 @@ class Jomti_Ps_Connector extends \Module
     public function postProcess()
     {
         $enabled = (int) \Tools::getValue(self::CONFIG_ENABLED, 1);
-        $jomtiUrl = "http://127.0.0.1:8000";//"https://jomti.com";
         $apiKey = trim((string) \Tools::getValue(self::CONFIG_API_KEY, ''));
         $debug = (int) \Tools::getValue(self::CONFIG_DEBUG, 0);
-
 
         if ($apiKey === '') {
             throw new \PrestaShopException($this->trans('API key is required.', [], 'Modules.JomtiPsConnector.Admin'));
         }
 
-        $validation = $this->validateRemoteApiKey($jomtiUrl, $apiKey);
-        if (!$validation['success']) {
-            throw new \PrestaShopException($this->trans('Could not validate API key on Jomti: %error%', ['%error%' => $validation['error']], 'Modules.JomtiPsConnector.Admin'));
-        }
-
         \Configuration::updateValue(self::CONFIG_ENABLED, $enabled);
-        \Configuration::updateValue(self::CONFIG_JOMTI_URL, pSQL(rtrim($jomtiUrl, '/')));
         \Configuration::updateValue(self::CONFIG_API_KEY, pSQL($apiKey));
         \Configuration::updateValue(self::CONFIG_DEBUG, $debug);
     }
@@ -100,13 +89,6 @@ class Jomti_Ps_Connector extends \Module
                     'icon' => 'icon-cogs',
                 ],
                 'input' => [
-                    // [
-                    //     'type' => 'text',
-                    //     'label' => $this->trans('Jomti URL', [], 'Modules.JomtiPsConnector.Admin'),
-                    //     'name' => self::CONFIG_JOMTI_URL,
-                    //     'required' => true,
-                    //     'desc' => $this->trans('Example: https://jomti.com', [], 'Modules.JomtiPsConnector.Admin'),
-                    // ],
                     [
                         'type' => 'text',
                         'label' => $this->trans('API Key', [], 'Modules.JomtiPsConnector.Admin'),
@@ -131,7 +113,6 @@ class Jomti_Ps_Connector extends \Module
         $helper->allow_employee_form_lang = (int) \Configuration::get('PS_BO_ALLOW_EMPLOYEE_FORM_LANG');
 
         $helper->fields_value = [
-            // self::CONFIG_JOMTI_URL => (string) \Configuration::get(self::CONFIG_JOMTI_URL),
             self::CONFIG_API_KEY => (string) \Configuration::get(self::CONFIG_API_KEY),
         ];
 
@@ -188,7 +169,7 @@ class Jomti_Ps_Connector extends \Module
 
     public function getJomtiUrl()
     {
-        return rtrim((string) \Configuration::get(self::CONFIG_JOMTI_URL), '/');
+        return 'https://jomti.com';
     }
 
     public function getExternalWebhookUrl()
